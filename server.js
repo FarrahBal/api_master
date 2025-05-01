@@ -133,6 +133,32 @@ app.put('/products/:id', authenticateToken, async (req, res) => {
     res.status(500).send(err);
   }
 });
+// Patch product - update only provided fields
+app.patch('/products/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ message: 'No fields provided for update' });
+  }
+
+  try {
+    const updated = await db('products')
+      .where({ productId: id })
+      .update(updates);
+
+    if (!updated) return res.status(404).json({ message: 'Product not found' });
+
+    const updatedProduct = await db('products').where({ productId: id }).first();
+    res.json({ message: 'Product updated', product: updatedProduct });
+  } catch (err) {
+    console.error('Patch product error:', err);
+    res.status(500).json({ message: 'Failed to update product' });
+  }
+});
+
+
+
 
 // Delete product
 app.delete('/products/:id', authenticateToken, async (req, res) => {
